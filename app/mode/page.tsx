@@ -2,43 +2,56 @@
 import { useAtom } from "jotai";
 import { quizModeAtom } from "@/atoms/quizAtoms";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ModePage() {
   const router = useRouter();
   const [, setMode] = useAtom(quizModeAtom);
-  const [selected, setSelected] = useState<"enToJa" | "jaToEn" | null>(null);
+
+  // ✅ デフォルトで「英単語問題」選択済みにする
+  const [selected, setSelected] = useState<"enToJa" | "jaToEn">("enToJa");
+
+  useEffect(() => {
+    setMode("enToJa");
+  }, [setMode]);
+
+  const handleConfirm = () => {
+    setMode(selected);
+    router.push("/quiz");
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <h1 className="text-2xl mb-6 font-bold">出題モードを選択</h1>
-      <div className="space-y-4">
+
+      {/* 中央寄せされたボタン群 */}
+      <div className="flex flex-col items-center space-y-4 w-full max-w-xs">
         <button
           onClick={() => setSelected("enToJa")}
-          className={`w-64 py-3 rounded ${
-            selected === "enToJa" ? "bg-blue-500" : "bg-gray-700"
+          className={`w-full py-3 rounded text-center transition-colors ${
+            selected === "enToJa"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-700 text-gray-200 hover:bg-gray-600"
           }`}
         >
           英単語問題
         </button>
+
         <button
           onClick={() => setSelected("jaToEn")}
-          className={`w-64 py-3 rounded ${
-            selected === "jaToEn" ? "bg-blue-500" : "bg-gray-700"
+          className={`w-full py-3 rounded text-center transition-colors ${
+            selected === "jaToEn"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-700 text-gray-200 hover:bg-gray-600"
           }`}
         >
           日本語問題
         </button>
       </div>
+
       <button
-        disabled={!selected}
-        onClick={() => {
-          if (selected) {
-            setMode(selected);
-            router.push("/quiz");
-          }
-        }}
-        className="mt-6 bg-green-500 hover:bg-green-600 px-6 py-3 rounded text-white disabled:opacity-50"
+        onClick={handleConfirm}
+        className="mt-8 bg-green-500 hover:bg-green-600 px-8 py-3 rounded text-white font-semibold"
       >
         確定
       </button>

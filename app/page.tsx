@@ -30,14 +30,17 @@ export default function Page() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
-      <h1 className="text-2xl mb-4 font-bold">CSVファイルを選択</h1>
+      <h1 className="text-2xl mb-6 font-bold">CSVファイルを選択</h1>
+
       {error && <p className="text-red-400 mb-3">{error}</p>}
-      <div className="space-y-3">
+
+      {/* 中央寄せされたボタンリスト */}
+      <div className="flex flex-col items-center space-y-4 w-full max-w-xs">
         {files.map((f) => (
           <button
             key={f}
             onClick={() => handleSelect(f)}
-            className="bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded text-white w-64 text-center"
+            className="bg-orange-500 hover:bg-orange-600 w-full py-3 rounded text-white text-center"
           >
             {f}
           </button>
