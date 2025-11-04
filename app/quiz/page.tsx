@@ -8,7 +8,7 @@ import {
   incorrectListAtom,
   selectedCsvAtom,
 } from "@/atoms/quizAtoms";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 type Pair = { en: string; ja: string };
@@ -98,8 +98,8 @@ export default function QuizPage() {
   return (
     <div className="p-4 flex flex-col items-center min-h-screen relative overflow-hidden">
       {/* === ヘッダー === */}
-      <div className="w-full max-w-3xl mb-4 bg-gray-800 p-3 rounded-md shadow flex flex-wrap justify-center sm:justify-between gap-3">
-        {/* CSVファイル選択ペア */}
+      <div className="w-full max-w-3xl mb-2 bg-gray-800 p-3 rounded-md shadow flex flex-wrap justify-center sm:justify-between gap-3">
+        {/* CSVファイル選択 */}
         <div className="flex items-center space-x-2">
           <button
             onClick={() => router.push("/")}
@@ -112,7 +112,7 @@ export default function QuizPage() {
           </span>
         </div>
 
-        {/* 出題モード選択ペア */}
+        {/* 出題モード選択 */}
         <div className="flex items-center space-x-2">
           <button
             onClick={() => router.push("/mode")}
@@ -127,55 +127,51 @@ export default function QuizPage() {
       </div>
 
       {/* === タイトル === */}
-      <h1 className="text-center text-xl font-bold mb-3">
+      <h1 className="text-center text-xl font-bold mb-1">
         同じ意味のペアをタップしてください
       </h1>
 
-      {/* === 問題＆解答（8問固定） === */}
-      <div className="grid grid-cols-2 gap-3 w-full max-w-3xl flex-1 items-center">
+      {/* === 問題＆解答（上寄せ配置） === */}
+      <div className="grid grid-cols-2 gap-2 w-full max-w-3xl mt-1">
         {/* 左側（問題） */}
-        <div className="flex flex-col justify-center space-y-2">
+        <div className="flex flex-col justify-start space-y-1">
           {leftWords.map((item, idx) => (
             <button
               key={idx}
               onClick={() => setSelectedLeft(item)}
-              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-all flex items-center justify-center text-sm sm:text-base ${
+              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-all flex items-center justify-center ${
                 selectedLeft === item
                   ? "bg-blue-500 text-white"
                   : "bg-gray-700 hover:bg-gray-600 text-white"
               }`}
-              style={{ lineHeight: "1.1", fontSize: "clamp(12px, 2vw, 16px)" }}
+              style={{ fontSize: "clamp(12px, 2vw, 16px)" }}
             >
-              <span className="truncate text-center">
-                {mode === "enToJa" ? item.en : item.ja}
-              </span>
+              {mode === "enToJa" ? item.en : item.ja}
             </button>
           ))}
         </div>
 
         {/* 右側（選択肢） */}
-        <div className="flex flex-col justify-center space-y-2">
+        <div className="flex flex-col justify-start space-y-1">
           {rightWords.map((item, idx) => (
             <button
               key={idx}
               onClick={() => setSelectedRight(item)}
-              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-all flex items-center justify-center text-sm sm:text-base ${
+              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-all flex items-center justify-center ${
                 selectedRight === item
                   ? "bg-orange-500 text-white"
                   : "bg-gray-700 hover:bg-gray-600 text-white"
               }`}
-              style={{ lineHeight: "1.1", fontSize: "clamp(12px, 2vw, 16px)" }}
+              style={{ fontSize: "clamp(12px, 2vw, 16px)" }}
             >
-              <span className="truncate text-center">
-                {mode === "enToJa" ? item.ja : item.en}
-              </span>
+              {mode === "enToJa" ? item.ja : item.en}
             </button>
           ))}
         </div>
       </div>
 
-      {/* === フィードバック（固定位置） === */}
-      <div className="absolute bottom-5 left-0 right-0 flex justify-center items-center pointer-events-none">
+      {/* === フィードバック（固定下部） === */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center pointer-events-none">
         <div className="h-6 text-center">
           {feedback && (
             <p className={`font-semibold ${feedbackColor} transition-opacity`}>
