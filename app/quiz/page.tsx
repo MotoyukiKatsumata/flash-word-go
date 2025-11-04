@@ -6,6 +6,7 @@ import {
   quizListAtom,
   progressAtom,
   incorrectListAtom,
+  selectedCsvAtom,
 } from "@/atoms/quizAtoms";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -13,11 +14,12 @@ import { useRouter } from "next/navigation";
 type Pair = { en: string; ja: string };
 
 export default function QuizPage() {
+  const router = useRouter();
   const [mode] = useAtom(quizModeAtom);
   const [list] = useAtom(quizListAtom);
   const [progress, setProgress] = useAtom(progressAtom);
   const [incorrect, setIncorrect] = useAtom(incorrectListAtom);
-  const router = useRouter();
+  const [selectedCsv] = useAtom(selectedCsvAtom);
 
   const [leftWords, setLeftWords] = useState<Pair[]>([]);
   const [rightWords, setRightWords] = useState<Pair[]>([]);
@@ -26,16 +28,14 @@ export default function QuizPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackColor, setFeedbackColor] = useState("text-green-400");
 
+  // 出題データ初期化
   useEffect(() => {
     if (!list.length) router.push("/");
-    // 最初の10問をセット
     const init = list.slice(0, 10);
     setLeftWords(init);
-    // 右側はランダムシャッフル
     setRightWords(shuffle([...init]));
   }, [list]);
 
-  // シャッフル関数
   const shuffle = (arr: Pair[]) => arr.sort(() => Math.random() - 0.5);
 
   // ペア選択ロジック
@@ -51,7 +51,7 @@ export default function QuizPage() {
         setFeedbackColor("text-green-400");
         setTimeout(() => setFeedback(null), 1000);
 
-        // 両方削除して新しい問題に置き換え
+        // 正解したペアを削除して次の問題に置き換え
         setLeftWords((prev) => prev.filter((p) => p !== selectedLeft));
         setRightWords((prev) => prev.filter((p) => p !== selectedRight));
         setProgress((p) => p + 1);
@@ -96,14 +96,45 @@ export default function QuizPage() {
 
   return (
     <div className="p-4 flex flex-col items-center">
+      {/* --- ヘッダーエリア --- */}
+      <div className="flex items-center justify-between w-full max-w-3xl mb-4">
+        <div className="flex space-x-3">
+          <button
+            onClick={() => router.push("/")}
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm"
+          >
+            CSVファイル選択
+          </button>
+          <button
+            onClick={() => router.push("/mode")}
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm"
+          >
+            出題モード選択
+          </button>
+        </div>
+
+        {/* 現在の状態表示 */}
+        <div className="text-right text-sm text-gray-300">
+          <p>
+            選択CSV: <span className="font-semibold">{selectedCsv}</span>
+          </p>
+          <p>
+            モード:{" "}
+            <span className="font-semibold">
+              {mode === "enToJa" ? "英単語問題" : "日本語問題"}
+            </span>
+          </p>
+        </div>
+      </div>
+
       <h1 className="text-center text-xl font-bold mb-4">
         同じ意味のペアをタップしてください
       </h1>
       {feedback && <p className={`mb-3 ${feedbackColor}`}>{feedback}</p>}
 
-      {/* 2カラム構成 */}
+      {/* --- 問題と解答の2カラム --- */}
       <div className="grid grid-cols-2 gap-6 w-full max-w-3xl">
-        {/* 左カラム（問題） */}
+        {/* 左：問題 */}
         <div className="flex flex-col space-y-3">
           {leftWords.map((item, idx) => (
             <button
@@ -120,7 +151,7 @@ export default function QuizPage() {
           ))}
         </div>
 
-        {/* 右カラム（解答選択肢） */}
+        {/* 右：選択肢 */}
         <div className="flex flex-col space-y-3">
           {rightWords.map((item, idx) => (
             <button
@@ -136,22 +167,6 @@ export default function QuizPage() {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* ナビゲーション */}
-      <div className="flex space-x-4 mt-8">
-        <button
-          onClick={() => router.push("/")}
-          className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded"
-        >
-          CSVファイル選択に戻る
-        </button>
-        <button
-          onClick={() => router.push("/mode")}
-          className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded"
-        >
-          出題モード選択に戻る
-        </button>
       </div>
     </div>
   );
