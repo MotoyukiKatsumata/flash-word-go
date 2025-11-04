@@ -8,7 +8,7 @@ import {
   incorrectListAtom,
   selectedCsvAtom,
 } from "@/atoms/quizAtoms";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 type Pair = { en: string; ja: string };
@@ -28,10 +28,11 @@ export default function QuizPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackColor, setFeedbackColor] = useState("text-green-400");
 
-  // 初期化
+  const MAX_DISPLAY = 8; // 1画面表示上限
+
   useEffect(() => {
     if (!list.length) router.push("/");
-    const init = list.slice(0, 10);
+    const init = list.slice(0, MAX_DISPLAY);
     setLeftWords(init);
     setRightWords(shuffle([...init]));
   }, [list]);
@@ -51,12 +52,12 @@ export default function QuizPage() {
         setFeedbackColor("text-green-400");
         setTimeout(() => setFeedback(null), 1000);
 
-        // 問題更新
+        // 正解したペアを削除して次を挿入
         setLeftWords((prev) => prev.filter((p) => p !== selectedLeft));
         setRightWords((prev) => prev.filter((p) => p !== selectedRight));
         setProgress((p) => p + 1);
 
-        const nextIndex = progress + 10;
+        const nextIndex = progress + MAX_DISPLAY;
         const nextPair = list[nextIndex];
         if (nextPair) {
           setLeftWords((prev) => [...prev, nextPair]);
@@ -95,10 +96,10 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="p-4 flex flex-col items-center min-h-screen relative">
+    <div className="p-4 flex flex-col items-center min-h-screen relative overflow-hidden">
       {/* === ヘッダー === */}
       <div className="w-full max-w-3xl mb-4 bg-gray-800 p-3 rounded-md shadow flex flex-wrap justify-center sm:justify-between gap-3">
-        {/* 左ペア */}
+        {/* CSVファイル選択ペア */}
         <div className="flex items-center space-x-2">
           <button
             onClick={() => router.push("/")}
@@ -106,12 +107,12 @@ export default function QuizPage() {
           >
             CSVファイル選択
           </button>
-          <span className="text-gray-200 text-sm">
+          <span className="text-gray-200 text-sm truncate max-w-[8rem]">
             {selectedCsv || "未選択"}
           </span>
         </div>
 
-        {/* 右ペア */}
+        {/* 出題モード選択ペア */}
         <div className="flex items-center space-x-2">
           <button
             onClick={() => router.push("/mode")}
@@ -126,52 +127,60 @@ export default function QuizPage() {
       </div>
 
       {/* === タイトル === */}
-      <h1 className="text-center text-xl font-bold mb-4">
+      <h1 className="text-center text-xl font-bold mb-3">
         同じ意味のペアをタップしてください
       </h1>
 
-      {/* === 問題＆解答 === */}
-      <div className="grid grid-cols-2 gap-6 w-full max-w-3xl">
-        {/* 左：問題 */}
-        <div className="flex flex-col space-y-3">
+      {/* === 問題＆解答（8問固定） === */}
+      <div className="grid grid-cols-2 gap-3 w-full max-w-3xl flex-1 items-center">
+        {/* 左側（問題） */}
+        <div className="flex flex-col justify-center space-y-2">
           {leftWords.map((item, idx) => (
             <button
               key={idx}
               onClick={() => setSelectedLeft(item)}
-              className={`w-full py-3 rounded text-center break-words transition-colors ${
+              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-all flex items-center justify-center text-sm sm:text-base ${
                 selectedLeft === item
                   ? "bg-blue-500 text-white"
-                  : "bg-gray-700 hover:bg-gray-600"
+                  : "bg-gray-700 hover:bg-gray-600 text-white"
               }`}
+              style={{ lineHeight: "1.1", fontSize: "clamp(12px, 2vw, 16px)" }}
             >
-              {mode === "enToJa" ? item.en : item.ja}
+              <span className="truncate text-center">
+                {mode === "enToJa" ? item.en : item.ja}
+              </span>
             </button>
           ))}
         </div>
 
-        {/* 右：選択肢 */}
-        <div className="flex flex-col space-y-3">
+        {/* 右側（選択肢） */}
+        <div className="flex flex-col justify-center space-y-2">
           {rightWords.map((item, idx) => (
             <button
               key={idx}
               onClick={() => setSelectedRight(item)}
-              className={`w-full py-3 rounded text-center break-words transition-colors ${
+              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-all flex items-center justify-center text-sm sm:text-base ${
                 selectedRight === item
                   ? "bg-orange-500 text-white"
-                  : "bg-gray-700 hover:bg-gray-600"
+                  : "bg-gray-700 hover:bg-gray-600 text-white"
               }`}
+              style={{ lineHeight: "1.1", fontSize: "clamp(12px, 2vw, 16px)" }}
             >
-              {mode === "enToJa" ? item.ja : item.en}
+              <span className="truncate text-center">
+                {mode === "enToJa" ? item.ja : item.en}
+              </span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* === フィードバック（固定表示） === */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center">
+      {/* === フィードバック（固定位置） === */}
+      <div className="absolute bottom-5 left-0 right-0 flex justify-center items-center pointer-events-none">
         <div className="h-6 text-center">
           {feedback && (
-            <p className={`font-semibold ${feedbackColor}`}>{feedback}</p>
+            <p className={`font-semibold ${feedbackColor} transition-opacity`}>
+              {feedback}
+            </p>
           )}
         </div>
       </div>
