@@ -1,4 +1,5 @@
 "use client";
+
 import { useAtom } from "jotai";
 import {
   quizModeAtom,
@@ -6,7 +7,7 @@ import {
   progressAtom,
   incorrectListAtom,
 } from "@/atoms/quizAtoms";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 type Pair = { en: string; ja: string };
@@ -16,35 +17,70 @@ export default function QuizPage() {
   const [list] = useAtom(quizListAtom);
   const [progress, setProgress] = useAtom(progressAtom);
   const [incorrect, setIncorrect] = useAtom(incorrectListAtom);
-  const [visible, setVisible] = useState<Pair[]>([]);
+  const router = useRouter();
+
+  const [leftWords, setLeftWords] = useState<Pair[]>([]);
+  const [rightWords, setRightWords] = useState<Pair[]>([]);
+  const [selectedLeft, setSelectedLeft] = useState<Pair | null>(null);
+  const [selectedRight, setSelectedRight] = useState<Pair | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackColor, setFeedbackColor] = useState("text-green-400");
-  const router = useRouter();
 
   useEffect(() => {
     if (!list.length) router.push("/");
-    setVisible(list.slice(0, 10));
+    // 最初の10問をセット
+    const init = list.slice(0, 10);
+    setLeftWords(init);
+    // 右側はランダムシャッフル
+    setRightWords(shuffle([...init]));
   }, [list]);
 
-  const handleAnswer = (q: Pair, answer: string) => {
-    const correct = mode === "enToJa" ? q.ja : q.en;
-    if (answer === correct) {
-      setFeedback("正解！");
-      setFeedbackColor("text-green-400");
-      setTimeout(() => setFeedback(null), 1000);
+  // シャッフル関数
+  const shuffle = (arr: Pair[]) => arr.sort(() => Math.random() - 0.5);
 
-      setProgress((p) => p + 1);
-      const next = list[progress + 10];
-      setVisible((v) => v.filter((x) => x !== q).concat(next ? [next] : []));
-    } else {
-      setFeedback(`不正解。正解は「${correct}」`);
-      setFeedbackColor("text-red-400");
-      setTimeout(() => setFeedback(null), 3000);
-      setIncorrect((prev) => [...prev, q]);
+  // ペア選択ロジック
+  useEffect(() => {
+    if (selectedLeft && selectedRight) {
+      const correct =
+        mode === "enToJa"
+          ? selectedLeft.ja === selectedRight.ja
+          : selectedLeft.en === selectedRight.en;
+
+      if (correct) {
+        setFeedback("正解！");
+        setFeedbackColor("text-green-400");
+        setTimeout(() => setFeedback(null), 1000);
+
+        // 両方削除して新しい問題に置き換え
+        setLeftWords((prev) => prev.filter((p) => p !== selectedLeft));
+        setRightWords((prev) => prev.filter((p) => p !== selectedRight));
+        setProgress((p) => p + 1);
+
+        const nextIndex = progress + 10;
+        const nextPair = list[nextIndex];
+        if (nextPair) {
+          setLeftWords((prev) => [...prev, nextPair]);
+          setRightWords((prev) => shuffle([...prev, nextPair]));
+        }
+
+        setSelectedLeft(null);
+        setSelectedRight(null);
+      } else {
+        setFeedback(
+          `不正解。正解は「${
+            mode === "enToJa" ? selectedLeft.ja : selectedLeft.en
+          }」`
+        );
+        setFeedbackColor("text-red-400");
+        setTimeout(() => setFeedback(null), 3000);
+        setIncorrect((prev) => [...prev, selectedLeft]);
+        setSelectedLeft(null);
+        setSelectedRight(null);
+      }
     }
-  };
+  }, [selectedLeft, selectedRight]);
 
-  if (progress >= list.length)
+  if (progress >= list.length) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <h1 className="text-2xl font-bold mb-4">全問終了！</h1>
@@ -56,35 +92,66 @@ export default function QuizPage() {
         </button>
       </div>
     );
+  }
 
   return (
-    <div className="p-4">
+    <div className="p-4 flex flex-col items-center">
       <h1 className="text-center text-xl font-bold mb-4">
         同じ意味のペアをタップしてください
       </h1>
-      {feedback && (
-        <p className={`text-center mb-3 ${feedbackColor}`}>{feedback}</p>
-      )}
-      <div className="grid grid-cols-2 gap-2">
-        {visible.map((q, i) => (
-          <div
-            key={i}
-            className="flex flex-col items-center bg-gray-800 p-2 rounded"
-          >
-            <p className="text-lg mb-2">{mode === "enToJa" ? q.en : q.ja}</p>
-            {visible.map((opt, j) => (
-              <button
-                key={j}
-                className="bg-orange-500 hover:bg-orange-600 w-full py-2 rounded text-sm"
-                onClick={() =>
-                  handleAnswer(q, mode === "enToJa" ? opt.ja : opt.en)
-                }
-              >
-                {mode === "enToJa" ? opt.ja : opt.en}
-              </button>
-            ))}
-          </div>
-        ))}
+      {feedback && <p className={`mb-3 ${feedbackColor}`}>{feedback}</p>}
+
+      {/* 2カラム構成 */}
+      <div className="grid grid-cols-2 gap-6 w-full max-w-3xl">
+        {/* 左カラム（問題） */}
+        <div className="flex flex-col space-y-3">
+          {leftWords.map((item, idx) => (
+            <button
+              key={idx}
+              onClick={() => setSelectedLeft(item)}
+              className={`w-full py-3 rounded text-center break-words transition-colors ${
+                selectedLeft === item
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-700 hover:bg-gray-600"
+              }`}
+            >
+              {mode === "enToJa" ? item.en : item.ja}
+            </button>
+          ))}
+        </div>
+
+        {/* 右カラム（解答選択肢） */}
+        <div className="flex flex-col space-y-3">
+          {rightWords.map((item, idx) => (
+            <button
+              key={idx}
+              onClick={() => setSelectedRight(item)}
+              className={`w-full py-3 rounded text-center break-words transition-colors ${
+                selectedRight === item
+                  ? "bg-orange-500 text-white"
+                  : "bg-gray-700 hover:bg-gray-600"
+              }`}
+            >
+              {mode === "enToJa" ? item.ja : item.en}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ナビゲーション */}
+      <div className="flex space-x-4 mt-8">
+        <button
+          onClick={() => router.push("/")}
+          className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded"
+        >
+          CSVファイル選択に戻る
+        </button>
+        <button
+          onClick={() => router.push("/mode")}
+          className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded"
+        >
+          出題モード選択に戻る
+        </button>
       </div>
     </div>
   );
