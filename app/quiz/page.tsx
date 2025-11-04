@@ -28,7 +28,7 @@ export default function QuizPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackColor, setFeedbackColor] = useState("text-green-400");
 
-  // 出題データ初期化
+  // 初期化
   useEffect(() => {
     if (!list.length) router.push("/");
     const init = list.slice(0, 10);
@@ -38,7 +38,7 @@ export default function QuizPage() {
 
   const shuffle = (arr: Pair[]) => arr.sort(() => Math.random() - 0.5);
 
-  // ペア選択ロジック
+  // 正誤判定
   useEffect(() => {
     if (selectedLeft && selectedRight) {
       const correct =
@@ -51,7 +51,7 @@ export default function QuizPage() {
         setFeedbackColor("text-green-400");
         setTimeout(() => setFeedback(null), 1000);
 
-        // 正解したペアを削除して次の問題に置き換え
+        // 問題更新
         setLeftWords((prev) => prev.filter((p) => p !== selectedLeft));
         setRightWords((prev) => prev.filter((p) => p !== selectedRight));
         setProgress((p) => p + 1);
@@ -95,44 +95,42 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="p-4 flex flex-col items-center">
-      {/* --- ヘッダーエリア --- */}
-      <div className="flex items-center justify-between w-full max-w-3xl mb-4">
-        <div className="flex space-x-3">
+    <div className="p-4 flex flex-col items-center min-h-screen relative">
+      {/* === ヘッダー === */}
+      <div className="w-full max-w-3xl mb-4 bg-gray-800 p-3 rounded-md shadow flex flex-wrap justify-center sm:justify-between gap-3">
+        {/* 左ペア */}
+        <div className="flex items-center space-x-2">
           <button
             onClick={() => router.push("/")}
-            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm"
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm text-white whitespace-nowrap"
           >
             CSVファイル選択
           </button>
+          <span className="text-gray-200 text-sm">
+            {selectedCsv || "未選択"}
+          </span>
+        </div>
+
+        {/* 右ペア */}
+        <div className="flex items-center space-x-2">
           <button
             onClick={() => router.push("/mode")}
-            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm"
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm text-white whitespace-nowrap"
           >
             出題モード選択
           </button>
-        </div>
-
-        {/* 現在の状態表示 */}
-        <div className="text-right text-sm text-gray-300">
-          <p>
-            選択CSV: <span className="font-semibold">{selectedCsv}</span>
-          </p>
-          <p>
-            モード:{" "}
-            <span className="font-semibold">
-              {mode === "enToJa" ? "英単語問題" : "日本語問題"}
-            </span>
-          </p>
+          <span className="text-gray-200 text-sm">
+            {mode === "enToJa" ? "英単語問題" : "日本語問題"}
+          </span>
         </div>
       </div>
 
+      {/* === タイトル === */}
       <h1 className="text-center text-xl font-bold mb-4">
         同じ意味のペアをタップしてください
       </h1>
-      {feedback && <p className={`mb-3 ${feedbackColor}`}>{feedback}</p>}
 
-      {/* --- 問題と解答の2カラム --- */}
+      {/* === 問題＆解答 === */}
       <div className="grid grid-cols-2 gap-6 w-full max-w-3xl">
         {/* 左：問題 */}
         <div className="flex flex-col space-y-3">
@@ -166,6 +164,15 @@ export default function QuizPage() {
               {mode === "enToJa" ? item.ja : item.en}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* === フィードバック（固定表示） === */}
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center">
+        <div className="h-6 text-center">
+          {feedback && (
+            <p className={`font-semibold ${feedbackColor}`}>{feedback}</p>
+          )}
         </div>
       </div>
     </div>
