@@ -27,17 +27,30 @@ export default function QuizPage() {
   const [selectedRight, setSelectedRight] = useState<Pair | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackColor, setFeedbackColor] = useState("text-green-400");
+  const [remainingIndices, setRemainingIndices] = useState<number[]>([]);
 
   const MAX_DISPLAY = 8; // 1画面表示上限
 
+  const shuffle = (arr: Pair[]) => arr.sort(() => Math.random() - 0.5);
+
   useEffect(() => {
     if (!list.length) router.push("/");
-    const init = list.slice(0, MAX_DISPLAY);
-    setLeftWords(init);
+
+    // すべての問題のインデックスをシャッフル
+    const allIndices = list.map((_, i) => i);
+    const shuffledIndices = allIndices.sort(() => Math.random() - 0.5);
+
+    // 最初の8問を取得
+    const initialIndices = shuffledIndices.slice(0, MAX_DISPLAY);
+    const init = initialIndices.map(i => list[i]);
+
+    // 残りのインデックスを保存
+    setRemainingIndices(shuffledIndices.slice(MAX_DISPLAY));
+
+    // 左右両方をシャッフル
+    setLeftWords(shuffle([...init]));
     setRightWords(shuffle([...init]));
   }, [list]);
-
-  const shuffle = (arr: Pair[]) => arr.sort(() => Math.random() - 0.5);
 
   // 正誤判定
   useEffect(() => {
@@ -52,16 +65,28 @@ export default function QuizPage() {
         setFeedbackColor("text-green-400");
         setTimeout(() => setFeedback(null), 1000);
 
-        // 正解したペアを削除して次を挿入
-        setLeftWords((prev) => prev.filter((p) => p !== selectedLeft));
-        setRightWords((prev) => prev.filter((p) => p !== selectedRight));
+        // 正解したペアを削除
+        const newLeftWords = leftWords.filter((p) => p !== selectedLeft);
+        const newRightWords = rightWords.filter((p) => p !== selectedRight);
+
+        // 進捗を更新
         setProgress((p) => p + 1);
 
-        const nextIndex = progress + MAX_DISPLAY;
-        const nextPair = list[nextIndex];
-        if (nextPair) {
-          setLeftWords((prev) => [...prev, nextPair]);
-          setRightWords((prev) => shuffle([...prev, nextPair]));
+        // 次の問題を追加（remainingIndicesから取得）
+        if (remainingIndices.length > 0) {
+          const nextIndex = remainingIndices[0];
+          const nextPair = list[nextIndex];
+
+          // 残りのインデックスを更新
+          setRemainingIndices(remainingIndices.slice(1));
+
+          // 新しい問題を追加して、左右両方をシャッフル
+          setLeftWords(shuffle([...newLeftWords, nextPair]));
+          setRightWords(shuffle([...newRightWords, nextPair]));
+        } else {
+          // 残りの問題がない場合はそのまま設定
+          setLeftWords(newLeftWords);
+          setRightWords(newRightWords);
         }
 
         setSelectedLeft(null);
