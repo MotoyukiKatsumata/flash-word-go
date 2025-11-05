@@ -99,7 +99,14 @@ export default function QuizPage() {
         );
         setFeedbackColor("text-red-400");
         setTimeout(() => setFeedback(null), 3000);
-        setIncorrect((prev) => [...prev, selectedLeft]);
+        setIncorrect((prev) => {
+          // 同じ問題が既に存在するかチェック
+          const alreadyExists = prev.some(
+            (p) => p.en === selectedLeft.en && p.ja === selectedLeft.ja
+          );
+          // 存在しない場合のみ追加
+          return alreadyExists ? prev : [...prev, selectedLeft];
+        });
         setSelectedLeft(null);
         setSelectedRight(null);
       }
