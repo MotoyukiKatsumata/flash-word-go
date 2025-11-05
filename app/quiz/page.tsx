@@ -130,16 +130,16 @@ export default function QuizPage() {
   return (
     <div className="p-4 flex flex-col items-center min-h-screen relative overflow-hidden">
       {/* === ヘッダー === */}
-      <div className="w-full max-w-3xl mb-2 bg-gray-800 p-3 rounded-md shadow flex flex-wrap justify-center sm:justify-between gap-3">
+      <div className="w-full max-w-3xl mb-2 bg-gray-800 p-3 rounded-md shadow">
         {/* CSVファイル選択 */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 mb-2">
           <button
             onClick={() => router.push("/")}
-            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm text-white whitespace-nowrap"
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm text-white whitespace-nowrap w-40"
           >
             CSVファイル選択
           </button>
-          <span className="text-gray-200 text-sm truncate max-w-[8rem]">
+          <span className="text-gray-200 text-sm truncate">
             {selectedCsv || "未選択"}
           </span>
         </div>
@@ -148,7 +148,7 @@ export default function QuizPage() {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => router.push("/mode")}
-            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm text-white whitespace-nowrap"
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm text-white whitespace-nowrap w-40"
           >
             出題モード選択
           </button>
