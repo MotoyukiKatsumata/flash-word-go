@@ -163,6 +163,13 @@ export default function QuizPage() {
         同じ意味のペアをタップしてください
       </h1>
 
+      {/* === 進捗表示 === */}
+      <div className="text-center mb-2">
+        <span className="text-lg font-semibold text-blue-400">
+          {progress} / {list.length}
+        </span>
+      </div>
+
       {/* === 問題＆解答（上寄せ配置） === */}
       <div className="grid grid-cols-2 gap-2 w-full max-w-3xl mt-1">
         {/* 左側（問題） */}
