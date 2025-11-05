@@ -209,11 +209,11 @@ export default function QuizPage() {
         </div>
       </div>
 
-      {/* === フィードバック（固定下部） === */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center pointer-events-none">
-        <div className="h-6 text-center">
+      {/* === フィードバック（ボタンのすぐ下） === */}
+      <div className="w-full max-w-3xl mt-4 flex justify-center items-center">
+        <div className="h-8 text-center">
           {feedback && (
-            <p className={`font-semibold ${feedbackColor} transition-opacity`}>
+            <p className={`font-semibold text-xl ${feedbackColor} transition-opacity`}>
               {feedback}
             </p>
           )}
