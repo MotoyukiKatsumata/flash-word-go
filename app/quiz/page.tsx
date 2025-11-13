@@ -65,32 +65,40 @@ export default function QuizPage() {
         setFeedbackColor("text-green-400");
         setTimeout(() => setFeedback(null), 1000);
 
-        // 正解したペアを削除
-        const newLeftWords = leftWords.filter((p) => p !== selectedLeft);
-        const newRightWords = rightWords.filter((p) => p !== selectedRight);
+        // 正解したペアを保存（クロージャ対策）
+        const correctLeft = selectedLeft;
+        const correctRight = selectedRight;
 
-        // 進捗を更新
-        setProgress((p) => p + 1);
-
-        // 次の問題を追加（remainingIndicesから取得）
-        if (remainingIndices.length > 0) {
-          const nextIndex = remainingIndices[0];
-          const nextPair = list[nextIndex];
-
-          // 残りのインデックスを更新
-          setRemainingIndices(remainingIndices.slice(1));
-
-          // 新しい問題を追加して、左右両方をシャッフル
-          setLeftWords(shuffle([...newLeftWords, nextPair]));
-          setRightWords(shuffle([...newRightWords, nextPair]));
-        } else {
-          // 残りの問題がない場合はそのまま設定
-          setLeftWords(newLeftWords);
-          setRightWords(newRightWords);
-        }
-
+        // 選択状態を即座にクリア
         setSelectedLeft(null);
         setSelectedRight(null);
+
+        // 少し遅延させてから削除と次の問題追加を行う
+        setTimeout(() => {
+          // 正解したペアを削除
+          const newLeftWords = leftWords.filter((p) => p !== correctLeft);
+          const newRightWords = rightWords.filter((p) => p !== correctRight);
+
+          // 進捗を更新
+          setProgress((p) => p + 1);
+
+          // 次の問題を追加（remainingIndicesから取得）
+          if (remainingIndices.length > 0) {
+            const nextIndex = remainingIndices[0];
+            const nextPair = list[nextIndex];
+
+            // 残りのインデックスを更新
+            setRemainingIndices(remainingIndices.slice(1));
+
+            // 新しい問題を追加して、左右両方をシャッフル
+            setLeftWords(shuffle([...newLeftWords, nextPair]));
+            setRightWords(shuffle([...newRightWords, nextPair]));
+          } else {
+            // 残りの問題がない場合はそのまま設定
+            setLeftWords(newLeftWords);
+            setRightWords(newRightWords);
+          }
+        }, 100);
       } else {
         setFeedback(
           `不正解。正解は「${
@@ -176,12 +184,15 @@ export default function QuizPage() {
         <div className="flex flex-col justify-start space-y-1">
           {leftWords.map((item, idx) => (
             <button
-              key={idx}
-              onClick={() => setSelectedLeft(item)}
-              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-all flex items-center justify-center ${
-                selectedLeft === item
+              key={`left-${item.en}-${item.ja}`}
+              onClick={(e) => {
+                setSelectedLeft(item);
+                e.currentTarget.blur(); // タッチ後にフォーカスを解除
+              }}
+              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-colors flex items-center justify-center ${
+                selectedLeft && selectedLeft.en === item.en && selectedLeft.ja === item.ja
                   ? "bg-blue-500 text-white"
-                  : "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-gray-700 text-white active:bg-gray-600"
               }`}
               style={{ fontSize: "clamp(12px, 2vw, 16px)" }}
             >
@@ -194,12 +205,15 @@ export default function QuizPage() {
         <div className="flex flex-col justify-start space-y-1">
           {rightWords.map((item, idx) => (
             <button
-              key={idx}
-              onClick={() => setSelectedRight(item)}
-              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-all flex items-center justify-center ${
-                selectedRight === item
+              key={`right-${item.en}-${item.ja}`}
+              onClick={(e) => {
+                setSelectedRight(item);
+                e.currentTarget.blur(); // タッチ後にフォーカスを解除
+              }}
+              className={`h-12 w-full rounded text-center px-2 break-words overflow-hidden transition-colors flex items-center justify-center ${
+                selectedRight && selectedRight.en === item.en && selectedRight.ja === item.ja
                   ? "bg-orange-500 text-white"
-                  : "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-gray-700 text-white active:bg-gray-600"
               }`}
               style={{ fontSize: "clamp(12px, 2vw, 16px)" }}
             >
